@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Sharing EP.06 — การวิเคราะห์อันตรายความปลอดภัยอาหาร | Siam Tohcello</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F4E;--navy2:#162660;--pink:#E8356D;--pink-light:#fce4ec;
+  --white:#fff;--gray:#f4f6fb;--gray2:#e8ecf0;--text:#1a2340;--text2:#5a6480;
+  --border:#dde3ef;--green:#2e7d32;--green-light:#e8f5e9;
+  --red:#c62828;--red-light:#ffebee;--amber:#b45309;--amber-light:#fff3e0;
+  --radius:14px;--shadow:0 2px 14px rgba(13,31,78,.10);
+}
+body{font-family:'Prompt','Sarabun',sans-serif;background:var(--gray);color:var(--text);min-height:100vh;padding-bottom:40px;font-size:15px}
+
+.app-header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:0;position:sticky;top:0;z-index:100}
+.header-inner{display:flex;align-items:center;gap:14px;padding:16px 18px 0}
+.logo-box{background:rgba(255,255,255,.15);border-radius:8px;padding:8px 11px;font-size:11px;font-weight:700;letter-spacing:1px;color:#fff;white-space:nowrap;line-height:1.4}
+.header-text h1{font-size:19px;font-weight:700;line-height:1.35}
+.header-text p{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px}
+
+.tabs{display:flex;gap:4px;padding:14px 18px 0}
+.tab{flex:1;text-align:center;padding:13px 6px;border-radius:10px 10px 0 0;font-size:15px;font-weight:700;color:rgba(255,255,255,.55);cursor:pointer;transition:.18s}
+.tab.active{background:var(--gray);color:var(--navy)}
+.tab:not(.active):hover{color:#fff}
+
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 0}
+.panel{display:none}
+.panel.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.section-title{display:flex;align-items:center;gap:8px;margin:24px 0 12px}
+.section-title:first-child{margin-top:0}
+.section-title .dot{width:8px;height:8px;border-radius:50%;background:var(--pink)}
+.section-title h2{font-size:17px;font-weight:800;color:var(--navy)}
+
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+.card p.desc{font-size:14.5px;color:var(--text2);line-height:1.7;margin-top:2px}
+
+.intro{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.intro .tag{display:inline-block;background:rgba(232,53,109,.25);border:1px solid rgba(232,53,109,.5);color:#ffd9e6;font-size:12px;font-weight:700;letter-spacing:1.5px;padding:4px 12px;border-radius:20px;margin-bottom:10px}
+.intro h3{font-size:20px;font-weight:800;margin-bottom:6px}
+.intro p{font-size:14.5px;color:rgba(255,255,255,.85);line-height:1.7}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+.hz-card{border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.icon-circle{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:8px;flex-shrink:0}
+.hz-card h4{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.hz-card p{font-size:13.5px;color:var(--text2);line-height:1.6}
+.hz-card .ex{font-size:12.5px;color:var(--navy);background:var(--gray);border-radius:8px;padding:5px 8px;margin-top:6px;display:inline-block;font-weight:600}
+
+.sev-card{border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.sev-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.sev-badge{font-size:13px;font-weight:800;padding:4px 13px;border-radius:20px;color:#fff}
+.sev-card ul{margin-top:6px}
+.sev-card li{font-size:13.5px;color:var(--text2);line-height:1.8;list-style:none}
+.sev-card li:before{content:"• ";color:var(--pink);font-weight:900}
+
+.matrix-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px;overflow-x:auto}
+table.matrix{border-collapse:collapse;width:100%;min-width:420px}
+table.matrix th,table.matrix td{text-align:center;padding:10px 6px;font-size:13.5px;border:1px solid var(--border)}
+table.matrix th{background:var(--navy);color:#fff;font-weight:700}
+.cell-sa{background:#fff8d6;color:#7a6400;font-weight:800}
+.cell-mi{background:#ffe2b3;color:#7a4a00;font-weight:800}
+.cell-ma{background:#ff9f6b;color:#7a2c00;font-weight:800}
+.cell-cr{background:#e8356d;color:#fff;font-weight:800}
+.matrix-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.leg-chip{font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:20px;color:#fff}
+
+.step-card{display:flex;gap:12px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;border:1px solid var(--border)}
+.step-num{width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-body h4{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:3px}
+.step-body p{font-size:13.5px;color:var(--text2);line-height:1.65}
+.step-body .doc-tag{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:var(--pink);background:var(--pink-light);padding:3px 10px;border-radius:20px}
+
+.note{background:var(--pink-light);border-right:4px solid var(--pink);border-radius:10px;padding:12px 14px;font-size:13.5px;color:#7a1638;line-height:1.7;margin-top:6px}
+
+/* ===== QUIZ ===== */
+.emp-form{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.emp-form h3{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:14px}
+.field{margin-bottom:14px}
+.field label{font-size:13px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px}
+.field select,.field input{width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:15px;color:var(--text);background:var(--gray)}
+.field select:focus{outline:none;border-color:var(--pink)}
+.field input[readonly]{color:var(--text2)}
+.btn{display:inline-block;width:100%;padding:13px;border-radius:10px;border:none;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:.18s}
+.btn-primary{background:var(--pink);color:#fff}
+.btn-primary:hover:not(:disabled){background:#c92a5c}
+.btn-primary:disabled{background:#f3b8cb;cursor:not-allowed}
+
+.quiz-intro-banner{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;color:#fff}
+.quiz-intro-banner h3{font-size:17px;font-weight:800;margin-bottom:4px}
+.quiz-intro-banner p{font-size:13px;color:rgba(255,255,255,.75)}
+
+.emp-summary{display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:12px}
+.emp-summary .es-label{font-size:12.5px;color:var(--text2);font-weight:600;margin-bottom:3px}
+.emp-summary .es-name{font-size:15.5px;color:var(--navy);font-weight:800}
+.edit-link{font-size:13.5px;color:var(--pink);font-weight:700;cursor:pointer;background:var(--pink-light);border:1.5px solid var(--pink);padding:8px 16px;border-radius:20px;white-space:nowrap}
+
+.q-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px;border-right:5px solid var(--pink)}
+.q-num{font-size:12px;font-weight:800;color:var(--pink);letter-spacing:1.5px;margin-bottom:7px}
+.q-text{font-size:16px;font-weight:700;color:var(--navy);line-height:1.65;margin-bottom:14px}
+.opt{display:block;width:100%;text-align:right;background:var(--gray);border:1.5px solid var(--border);border-radius:10px;padding:13px 15px;font-family:inherit;font-size:14.5px;color:var(--text);cursor:pointer;margin-bottom:9px;transition:.15s;line-height:1.6}
+.opt:hover:not(:disabled){border-color:var(--pink);background:var(--pink-light)}
+.opt.sel{background:var(--pink-light);border-color:var(--pink);font-weight:700}
+.opt.correct{background:var(--green-light);border-color:var(--green);color:#1b5e20;font-weight:700}
+.opt.wrong{background:var(--red-light);border-color:var(--red);color:#8e1c1c;font-weight:700}
+.opt:disabled{cursor:default}
+
+.quiz-foot{text-align:center;margin-top:8px}
+.result-box{display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:30px 20px;text-align:center;margin-top:16px;overflow:hidden}
+.result-box.show{display:block}
+.result-emoji{font-size:56px;margin-bottom:10px}
+.result-score{font-size:34px;font-weight:800;color:var(--pink)}
+.result-sub{font-size:13.5px;color:var(--text2);margin-top:2px;margin-bottom:18px}
+.result-banner{border-radius:var(--radius);padding:18px 16px;margin-top:6px;color:#fff}
+.result-banner.pass{background:linear-gradient(135deg,var(--navy),var(--navy2))}
+.result-banner.fail{background:linear-gradient(135deg,#6b2338,#8e2f47)}
+.result-banner .rb-title{font-size:16.5px;font-weight:800;margin-bottom:6px}
+.result-banner .rb-token{font-size:15px;font-weight:700;margin-bottom:8px}
+.result-banner .rb-tagline{font-size:12.5px;color:rgba(255,255,255,.75)}
+.save-status{display:none;margin-top:14px;font-size:13.5px;font-weight:700;padding:11px 14px;border-radius:10px}
+.save-status.ok{background:var(--green-light);color:#1b5e20}
+.save-status.err{background:var(--red-light);color:#8e1c1c}
+.retry-btn{margin-top:16px}
+
+.progress-wrap{margin-bottom:16px}
+.progress-row{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.progress-bar{height:8px;background:var(--gray2);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),#ff6b9a);border-radius:4px;transition:width .35s}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-inner">
+    <div class="logo-box">SIAM<br>TOHCELLO</div>
+    <div class="header-text">
+      <h1>QA Sharing EP.06</h1>
+      <p>การวิเคราะห์อันตรายความปลอดภัยอาหาร (Food Safety Hazard Analysis)</p>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="content">🛡️ มาตรการ</div>
+    <div class="tab" data-tab="quiz">📄 แบบทดสอบ</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ TAB 1: เนื้อหา (รวม) ============ -->
+  <div class="panel active" id="panel-content">
+
+    <div class="intro">
+      <span class="tag">HACCP · FSSC 22000</span>
+      <h3>การวิเคราะห์อันตรายความปลอดภัยอาหารคืออะไร?</h3>
+      <p>HACCP (Hazard Analysis Critical Control Point) คือระบบวิเคราะห์อันตรายและจุดวิกฤตที่ต้องควบคุมในกระบวนการผลิต เพื่อให้มั่นใจว่าผลิตภัณฑ์ของบริษัทปลอดภัยต่อผู้บริโภค ตั้งแต่วัตถุดิบจนถึงผลิตภัณฑ์สำเร็จรูป</p>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>ผู้รับผิดชอบ</h2></div>
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="border-right:3px solid var(--pink);padding-right:10px">
+          <b style="color:var(--navy);font-size:12.5px">หัวหน้าทีมความปลอดภัยอาหาร (Food Safety Team Leader)</b>
+          <p class="desc" style="margin-top:3px">เป็นตัวแทนฝ่ายบริหารในการจัดทำระบบ HACCP จัดประชุมติดตามความคืบหน้า และสรุปผลให้ทีมความปลอดภัยอาหาร ผู้บริหาร และผู้เกี่ยวข้องรับทราบ</p>
+        </div>
+        <div style="border-right:3px solid var(--pink);padding-right:10px">
+          <b style="color:var(--navy);font-size:12.5px">ทีมความปลอดภัยอาหาร (Food Safety Team)</b>
+          <p class="desc" style="margin-top:3px">รับผิดชอบดำเนินการจัดทำระบบ HACCP ติดตามความคืบหน้า และรายงานผลการดำเนินการให้หัวหน้าทีมความปลอดภัยอาหารรับทราบ</p>
+        </div>
+        <div style="border-right:3px solid var(--pink);padding-right:10px">
+          <b style="color:var(--navy);font-size:12.5px">พนักงานและผู้เกี่ยวข้อง</b>
+          <p class="desc" style="margin-top:3px">ปฏิบัติตามแผนการต่าง ๆ ที่ทีมความปลอดภัยอาหารกำหนดตามแผน HACCP</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>คำจำกัดความ</h2></div>
+    <div class="grid2">
+      <div class="hz-card" style="background:#e8eaf6">
+        <h4>HACCP</h4>
+        <p>Hazard Analysis Critical Control Point — การวิเคราะห์อันตรายและจุดวิกฤตที่ต้องควบคุมในกระบวนการผลิต</p>
+      </div>
+      <div class="hz-card" style="background:#e0f2f1">
+        <h4>CCP</h4>
+        <p>Critical Control Point — จุด/ขั้นตอน/วิธีการที่สำคัญหรือวิกฤตในกระบวนการผลิต ซึ่งสามารถควบคุมเพื่อลดหรือกำจัดอันตรายให้อยู่ในระดับที่ยอมรับได้</p>
+      </div>
+      <div class="hz-card" style="background:#fff8e1">
+        <h4>OPRP</h4>
+        <p>Operational Prerequisite Programs — มาตรการควบคุมแบบรวมที่ใช้ป้องกันอันตรายที่มีนัยของด้านอาหารให้อยู่ในระดับยอมรับได้ พร้อมกำหนดเกณฑ์การปฏิบัติ เช่น การวัดหรือการเฝ้าสังเกต</p>
+      </div>
+      <div class="hz-card" style="background:#fce4ec">
+        <h4>PRP</h4>
+        <p>Prerequisite Programs — มาตรการควบคุมที่ใช้จัดการกับกิจกรรมและสภาวะพื้นฐาน ไม่ได้มีวัตถุประสงค์เพื่อควบคุมอันตรายที่ระบุโดยตรง</p>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>7 ประเภทอันตรายด้านความปลอดภัยอาหาร</h2></div>
+    <div class="grid2">
+      <div class="hz-card" style="background:#e3f2fd">
+        <div class="icon-circle" style="background:#1565c0;color:#fff">🦠</div>
+        <h4>ชีวภาพ (Biological)</h4>
+        <p>เชื้อจุลินทรีย์ แบคทีเรีย ไวรัส เชื้อรา และปรสิต</p>
+        <span class="ex">เช่น Salmonella, E.coli</span>
+      </div>
+      <div class="hz-card" style="background:#fff3e0">
+        <div class="icon-circle" style="background:#e65100;color:#fff">🧪</div>
+        <h4>เคมี (Chemical)</h4>
+        <p>สารเคมีหรือสารที่เจตนาเติมระหว่างการผลิต</p>
+        <span class="ex">เช่น โลหะหนัก น้ำมันหล่อลื่น</span>
+      </div>
+      <div class="hz-card" style="background:#f3e5f5">
+        <div class="icon-circle" style="background:#6a1b9a;color:#fff">🔩</div>
+        <h4>กายภาพ (Physical)</h4>
+        <p>สิ่งแปลกปลอมที่ปนเปื้อนเข้าสู่ผลิตภัณฑ์</p>
+        <span class="ex">เช่น เศษแก้ว โลหะ เศษไม้</span>
+      </div>
+      <div class="hz-card" style="background:#e8f5e9">
+        <div class="icon-circle" style="background:#2e7d32;color:#fff">🥛</div>
+        <h4>สารก่อภูมิแพ้ (Allergen)</h4>
+        <p>การปนเปื้อนจากสารก่อภูมิแพ้ต่าง ๆ</p>
+        <span class="ex">เช่น นม ไข่ ถั่ว</span>
+      </div>
+      <div class="hz-card" style="background:#fce4ec">
+        <div class="icon-circle" style="background:#c2185b;color:#fff">☢️</div>
+        <h4>กัมมันตรังสี (Radiological)</h4>
+        <p>การปนเปื้อนจากรังสีที่แผ่ออกจากธาตุกัมมันตรังสี</p>
+        <span class="ex">เช่น ไอโอดีน-131, ซีเซียม-137</span>
+      </div>
+      <div class="hz-card" style="background:#fff8e1">
+        <div class="icon-circle" style="background:#b8860b;color:#fff">🕵️</div>
+        <h4>อาหารปลอม/ทุจริต (Food Fraud)</h4>
+        <p>ใช้วัตถุดิบที่ไม่ได้มาตรฐาน หรือแอบผสมเม็ดรีไซเคิล</p>
+        <span class="ex">ป้องกัน: ตรวจแหล่งที่มา + COA ทุกล็อต + Traceability</span>
+      </div>
+      <div class="hz-card" style="background:#eceff1;grid-column:1/-1">
+        <div class="icon-circle" style="background:#37474f;color:#fff">🚫</div>
+        <h4>เจตนาใส่สิ่งแปลกปลอม (Malicious Hazard)</h4>
+        <p>บุคคลเจตนาใส่วัตถุอันตรายหรือทำลายคุณภาพฟิล์ม</p>
+        <span class="ex">ป้องกัน: ควบคุมการเข้าถึงพื้นที่ผลิต + กล้องวงจรปิด + ช่องทางแจ้งเบาะแส</span>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>โอกาสในการเกิดอันตราย (Likelihood)</h2></div>
+    <div class="card">
+      <p class="desc">แบ่งเป็น 4 ระดับ ตามความถี่ที่คาดว่าจะเกิดขึ้น:</p>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;background:var(--gray);padding:8px 12px;border-radius:8px;font-size:12px"><b>สูง (High)</b><span>1 ครั้ง / เดือน</span></div>
+        <div style="display:flex;justify-content:space-between;background:var(--gray);padding:8px 12px;border-radius:8px;font-size:12px"><b>ปานกลาง (Moderate)</b><span>1 ครั้ง / 3 เดือน</span></div>
+        <div style="display:flex;justify-content:space-between;background:var(--gray);padding:8px 12px;border-radius:8px;font-size:12px"><b>ต่ำ (Low)</b><span>1 ครั้ง / 6 เดือน–ปี</span></div>
+        <div style="display:flex;justify-content:space-between;background:var(--gray);padding:8px 12px;border-radius:8px;font-size:12px"><b>ไม่มีความเสี่ยง (Negligible)</b><span>ไม่มีโอกาสเกิดขึ้นเลย</span></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>ความรุนแรงของอันตราย (Severity)</h2></div>
+    <div class="sev-card" style="background:var(--red-light)">
+      <div class="sev-head"><span class="sev-badge" style="background:var(--red)">สูง (High)</span><span style="font-size:11px;color:var(--text2)">ไม่จำกัดระยะเวลารักษา — อาจถึงแก่ชีวิต</span></div>
+      <ul>
+        <li>ชีวภาพ: Salmonella, Staphylococcus aureus, Clostridium perfringens, Bacillus cereus</li>
+        <li>เคมี: โลหะหนัก</li>
+        <li>กายภาพ: วัสดุขนาด 2–25 มม. เช่น แก้ว มีดคัตเตอร์ โลหะ</li>
+        <li>สารก่อภูมิแพ้ / กัมมันตรังสี: การปนเปื้อนโดยตรง</li>
+      </ul>
+    </div>
+    <div class="sev-card" style="background:var(--amber-light)">
+      <div class="sev-head"><span class="sev-badge" style="background:var(--amber)">ปานกลาง (Moderate)</span><span style="font-size:11px;color:var(--text2)">รักษามากกว่า 30 วัน แต่ไม่ถึงแก่ชีวิต</span></div>
+      <ul>
+        <li>ชีวภาพ: เชื้อ E.coli</li>
+        <li>เคมี: น้ำมันหล่อลื่น จารบี</li>
+        <li>กายภาพ: วัสดุขนาดใหญ่กว่า 25 มม. เช่น กรวด หิน พลาสติก</li>
+      </ul>
+    </div>
+    <div class="sev-card" style="background:var(--green-light)">
+      <div class="sev-head"><span class="sev-badge" style="background:var(--green)">ต่ำ (Low)</span><span style="font-size:11px;color:var(--text2)">รักษาภายใน 30 วัน</span></div>
+      <ul>
+        <li>เคมี: สารทำความสะอาดและน้ำยาฆ่าเชื้อ</li>
+        <li>กายภาพ: วัสดุขนาดเล็ก เช่น เศษผม เศษฟิล์ม</li>
+      </ul>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>ระดับนัยสำคัญของอันตราย (Significance)</h2></div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr><th></th><th>Low</th><th>Medium</th><th>High</th></tr>
+        <tr><td style="background:var(--navy);color:#fff">High</td><td class="cell-sa">Sa</td><td class="cell-mi">Mi</td><td class="cell-cr">Cr</td></tr>
+        <tr><td style="background:var(--navy);color:#fff">Medium</td><td class="cell-sa">Sa</td><td class="cell-mi">Mi</td><td class="cell-ma">Ma</td></tr>
+        <tr><td style="background:var(--navy);color:#fff">Low</td><td class="cell-sa">Sa</td><td class="cell-mi">Mi</td><td class="cell-mi">Mi</td></tr>
+        <tr><td style="background:var(--navy);color:#fff">Negligible</td><td class="cell-sa">Sa</td><td class="cell-sa">Sa</td><td class="cell-sa">Sa</td></tr>
+      </table>
+      <div class="matrix-legend">
+        <span class="leg-chip" style="background:var(--pink)">Cr = Critical (วิกฤต)</span>
+        <span class="leg-chip" style="background:#ff9f6b;color:#7a2c00">Ma = Major (สูง)</span>
+        <span class="leg-chip" style="background:#ffe2b3;color:#7a4a00">Mi = Minor (ปานกลาง)</span>
+        <span class="leg-chip" style="background:#fff8d6;color:#7a6400">Sa = Satisfactory (ยอมรับได้)</span>
+      </div>
+      <div class="note">ระดับ <b>ปานกลาง / สูง / วิกฤต</b> คือจุดที่ต้องพิจารณากำหนดเป็น OPRP หรือ CCP ต่อไป</div>
+    </div>
+
+    <div class="section-title"><span class="dot"></span><h2>10 ขั้นตอนหลักของระบบ HACCP</h2></div>
+
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-body"><h4>จัดตั้งทีมความปลอดภัยอาหาร</h4><p>ผู้บริหารแต่งตั้งหัวหน้าและทีมความปลอดภัยอาหาร ซึ่งต้องผ่านการฝึกอบรมด้าน Food Safety</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>อธิบายคุณลักษณะวัตถุดิบ/ส่วนประกอบ</h4>
+        <p>ระบุลักษณะทางชีวภาพ/เคมี/กายภาพ แหล่งที่มา วิธีผลิต บรรจุภัณฑ์-ขนส่ง การจัดเก็บ-อายุ และเกณฑ์การยอมรับด้านความปลอดภัยอาหาร</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>อธิบายรายละเอียดผลิตภัณฑ์และจุดประสงค์การใช้งาน</h4>
+        <p>ระบุชื่อ องค์ประกอบ คุณลักษณะด้านความปลอดภัยอาหาร อายุการเก็บรักษา บรรจุภัณฑ์ ฉลาก/คำแนะนำ และวิธีกระจายสินค้า</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>จัดทำแผนผังการไหลของกระบวนการ</h4>
+        <p>ครอบคลุมลำดับขั้นตอน กระบวนการภายนอก จุดนำวัตถุดิบเข้า จุดทำซ้ำ/นำกลับมาใช้ใหม่ และจุดปล่อยผลิตภัณฑ์/ของเสีย พร้อมยืนยันความถูกต้อง ณ สถานที่ปฏิบัติงานจริง</p>
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <div class="step-body"><h4>วิเคราะห์อันตรายและพิจารณามาตรการควบคุม</h4><p>ระบุอันตรายทั้ง 5 ประเภทในทุกขั้นตอน ประเมินโอกาสและความรุนแรง แล้วกำหนดระดับนัยสำคัญ (Sa/Mi/Ma/Cr)</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">6</div>
+      <div class="step-body"><h4>กำหนดจุดวิกฤตที่ต้องควบคุม (CCP)</h4><p>ใช้ดุลยพินิจผู้เชี่ยวชาญหรือ Decision Tree เพื่อพิจารณาว่าเป็นจุด OPRP หรือ CCP</p><span class="doc-tag">อ้างอิง: Attachment 1 — Decision Tree</span></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">7</div>
+      <div class="step-body"><h4>กำหนดค่าวิกฤต (Critical Limit)</h4><p>ค่าที่ใช้แยกระหว่างยอมรับได้กับไม่ยอมรับ เช่น pH อุณหภูมิ เวลา ความชื้น คลอรีนคงเหลือ ความหนืด</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">8</div>
+      <div class="step-body"><h4>กำหนดแผนตรวจติดตาม (Monitoring)</h4><p>ระบุว่าตรวจอะไร วิธีใด ความถี่เท่าไร และใครเป็นผู้ตรวจติดตามแต่ละจุด CCP</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">9</div>
+      <div class="step-body"><h4>กำหนดวิธีการแก้ไข (Corrective Action)</h4><p>เมื่อพบการเบี่ยงเบน ต้องกันผลิตภัณฑ์ไม่ปลอดภัยไม่ให้ถูกปล่อยออก หาสาเหตุ แก้ไข และป้องกันการเกิดซ้ำ</p></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">10</div>
+      <div class="step-body">
+        <h4>ทวนสอบและจัดทำเอกสาร</h4>
+        <p>ทวนสอบแผน PRPs และ HACCP <b>อย่างน้อยปีละครั้ง</b> หรือก่อนมีการเปลี่ยนแปลงที่กระทบต่ออันตราย เช่น เปลี่ยนวัตถุดิบ/ผู้จำหน่าย สูตร กระบวนการ/อุปกรณ์/บรรจุภัณฑ์ ผลตรวจภายใน-ภายนอก เหตุการณ์เรียกคืนสินค้า หรือกฎหมายใหม่ พร้อมจัดเก็บเอกสารและบันทึกให้ครบถ้วน</p>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:14px">📄 เอกสารบันทึก: <b>FRM-QAS-077</b> — PRPs Verification Audit Checklist (เก็บที่ QA section เป็นเวลา 3 ปี)</div>
+
+  </div>
+
+  <!-- ============ TAB 2: แบบทดสอบ ============ -->
+  <div class="panel" id="panel-quiz">
+
+    <div class="quiz-intro-banner">
+      <h3>📄 แบบทดสอบ EP.06 — การวิเคราะห์อันตรายความปลอดภัยอาหาร</h3>
+      <p>5 ข้อ · ต้องได้ 100% ถึงจะผ่าน 🏆</p>
+    </div>
+
+    <div id="emp-form" class="emp-form">
+      <h3>📋 เลือกชื่อพนักงานก่อนทำแบบทดสอบ</h3>
+      <div class="field">
+        <label>ชื่อพนักงาน (Full name)</label>
+        <select id="f-emp"><option value="">— เลือกชื่อ —</option></select>
+      </div>
+      <div class="field">
+        <label>รหัสพนักงาน (Employee ID)</label>
+        <input type="text" id="f-empid" readonly>
+      </div>
+      <div class="field">
+        <label>แผนก (Section)</label>
+        <input type="text" id="f-dept" readonly>
+      </div>
+      <button class="btn btn-primary" id="start-btn" onclick="startQuiz()" disabled>เริ่มทำแบบทดสอบ →</button>
+    </div>
+
+    <div id="emp-summary" class="emp-summary">
+      <div>
+        <div class="es-label">พนักงานที่เลือก</div>
+        <div class="es-name"><span id="sum-name"></span> (<span id="sum-dept"></span>)</div>
+      </div>
+      <span class="edit-link" onclick="editEmp()">✏️ แก้ไข</span>
+    </div>
+
+    <div id="quiz-body" style="display:none">
+      <div class="progress-wrap">
+        <div class="progress-row"><span>ตอบแล้ว</span><span id="prog-label">0 / 5</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div id="quiz-questions"></div>
+      <div class="quiz-foot">
+        <button class="btn btn-primary" id="submit-btn" onclick="submitQuiz()" disabled>ส่งคำตอบ</button>
+      </div>
+    </div>
+
+    <div class="result-box" id="result-box">
+      <div class="result-emoji" id="result-emoji">🏆</div>
+      <div class="result-score" id="result-score">5/5</div>
+      <div class="result-sub" id="result-sub">คะแนน (5 ข้อ)</div>
+      <div class="result-banner pass" id="result-banner">
+        <div class="rb-title" id="rb-title">ยอดเยี่ยม! ผ่านแบบทดสอบ 100%</div>
+        <div class="rb-token" id="rb-token">🪙 รับไปเลย 5 Token!</div>
+        <div class="rb-tagline" id="rb-tagline">คุณเข้าใจการวิเคราะห์อันตรายความปลอดภัยอาหารอย่างสมบูรณ์แบบ</div>
+      </div>
+      <div class="save-status" id="save-status"></div>
+      <button class="btn retry-btn" id="retry-btn" style="background:var(--gray);color:var(--navy);border:1.5px solid var(--border)" onclick="retryQuiz()">🔄 ทำแบบทดสอบใหม่</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ===== TAB SWITCH ===== */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+/* ===== EMPLOYEE LIST (จากไฟล์รายชื่อพนักงานล่าสุด) ===== */
+const EMPLOYEES = [
+  {no:1, empId:"1402049", name:"Ms. Supanee Mangsa", section:"ACC"},
+  {no:2, empId:"1402050", name:"Ms. Paiwan Dongkaew", section:"ACC"},
+  {no:3, empId:"1702111", name:"Ms. Chawanlak Sangcha", section:"ACC"},
+  {no:4, empId:"2202135", name:"Ms. Punnapha Suypongpun", section:"ACC"},
+  {no:5, empId:"9000016", name:"Ms. Intuon Thawornsawat", section:"ACC"},
+  {no:6, empId:"2500158", name:"Mr. Chanitpol Ngamwutikul", section:"BD"},
+  {no:7, empId:"2102126", name:"Ms. Parichat Khumkhum", section:"HRG"},
+  {no:8, empId:"2500156", name:"Mr. Prasert Urai", section:"HRG"},
+  {no:9, empId:"9000021", name:"Ms. Arisara Boonsit", section:"HRG"},
+  {no:10, empId:"9000022", name:"Ms. Sirithorn Chaisaree", section:"HRG"},
+  {no:11, empId:"9000025", name:"Ms. Sirilak Phonphak", section:"HRG"},
+  {no:12, empId:"1502074", name:"Ms. Yani Wachiranuntagorn", section:"MKT"},
+  {no:13, empId:"1702102", name:"Ms. Siriporn Asawakosinchai", section:"MKT"},
+  {no:14, empId:"1702103", name:"Ms. Duangrutai Vongpunsua", section:"MKT"},
+  {no:15, empId:"1702105", name:"Ms. Supanan Sangtipkanya", section:"MKT"},
+  {no:16, empId:"2301142", name:"Mr. Sarit Sukwattanajaroon", section:"MKT"},
+  {no:17, empId:"2402148", name:"Ms. Nattawan Petchsang", section:"MKT"},
+  {no:18, empId:"2600162", name:"Ms. Sudaporn Rodpai", section:"MKT"},
+  {no:19, empId:"1301009", name:"Mr. Napon Thong-In", section:"MTS"},
+  {no:21, empId:"1401040", name:"Mr. Prattana Krodphan", section:"MTS"},
+  {no:22, empId:"1401067", name:"Mr. Prasong Panprom", section:"MTS"},
+  {no:23, empId:"2600160", name:"Mr. Patomchai Chaichana", section:"MTS"},
+  {no:24, empId:"2600163", name:"Mr. Kittiphong Raksakom", section:"MTS"},
+  {no:25, empId:"9000023", name:"Ms. Mewadee Kongsaeng", section:"MTS"},
+  {no:26, empId:"1301016", name:"Mr. Somphong Bubpharak", section:"PRS A"},
+  {no:27, empId:"1301038", name:"Mr. Yutpichai Prajong", section:"PRS A"},
+  {no:28, empId:"1401051", name:"Mr. Aekkapan Santhawinai", section:"PRS A"},
+  {no:29, empId:"1401059", name:"Mr. Kittisak Khantee", section:"PRS A"},
+  {no:30, empId:"1401069", name:"Mr. Saranyu Boonrux", section:"PRS A"},
+  {no:31, empId:"1601090", name:"Mr. Wutthiphong Wilai", section:"PRS A"},
+  {no:32, empId:"1601095", name:"Mr. Phodsakon Aedeang", section:"PRS A"},
+  {no:33, empId:"2301140", name:"Mr. Wanchai Hongloy", section:"PRS A"},
+  {no:34, empId:"2301141", name:"Mr. Wanuson Thopason", section:"PRS A"},
+  {no:35, empId:"9000009", name:"Mr. Niphon Dutsadi", section:"PRS A"},
+  {no:36, empId:"9000011", name:"Mr. Pongsagon Nilrasamee", section:"PRS A"},
+  {no:37, empId:"9000019", name:"Mr. Aerawan Arunsri", section:"PRS A"},
+  {no:38, empId:"9000029", name:"Mr. Sittichai Aroonrat", section:"PRS A"},
+  {no:39, empId:"9000033", name:"Mr. Chetsada Homniam", section:"PRS A"},
+  {no:40, empId:"1301018", name:"Mr. Setthaphat Namsiphan", section:"PRS B"},
+  {no:41, empId:"1301033", name:"Mr. Sarawoot Najampa", section:"PRS B"},
+  {no:42, empId:"1301037", name:"Mr. Wutipol Praneetponkrang", section:"PRS B"},
+  {no:43, empId:"1501080", name:"Mr. Amorn Kheamphimai", section:"PRS B"},
+  {no:44, empId:"1701108", name:"Mr. Mongkhon Sangsai", section:"PRS B"},
+  {no:45, empId:"2101127", name:"Mr. Somchai Tungmundee", section:"PRS B"},
+  {no:46, empId:"2401150", name:"Mr. Khetdaen Decha", section:"PRS B"},
+  {no:47, empId:"2500157", name:"Mr. Thawatchai Chaisawang", section:"PRS B"},
+  {no:48, empId:"2500159", name:"Mr. Chattarin Phomdom", section:"PRS B"},
+  {no:49, empId:"9000008", name:"Mr. Chamnan Pachana", section:"PRS B"},
+  {no:50, empId:"9000010", name:"Mr. Thanakorn Phannoi", section:"PRS B"},
+  {no:51, empId:"9000024", name:"Mr. Banpot Dudsadee", section:"PRS B"},
+  {no:52, empId:"9000028", name:"Mr. Thanakrid Ruangsakul", section:"PRS B"},
+  {no:53, empId:"9000032", name:"Mr. Jackarin Chantayang", section:"PRS B"},
+  {no:54, empId:"1301024", name:"Mr. Pichit Viekthaisong", section:"PRS C"},
+  {no:55, empId:"1301029", name:"Mr. Wuttichai Nukhuntod", section:"PRS C"},
+  {no:56, empId:"1301032", name:"Mr. Wichai Chaikeeree", section:"PRS C"},
+  {no:57, empId:"1401046", name:"Mr. Piya Lamul", section:"PRS C"},
+  {no:58, empId:"1401071", name:"Mr. Udomporn Chaisawang", section:"PRS C"},
+  {no:59, empId:"1501078", name:"Mr. Weerayut Piakot", section:"PRS C"},
+  {no:60, empId:"1701110", name:"Mr. Phanuwat Suwannawong", section:"PRS C"},
+  {no:61, empId:"2301139", name:"Mr. Weerachai Yothina", section:"PRS C"},
+  {no:62, empId:"2600161", name:"Mr. Anawin Khangklang", section:"PRS C"},
+  {no:63, empId:"9000006", name:"Mr. Praditpong Sidama", section:"PRS C"},
+  {no:64, empId:"9000012", name:"Mr. Kitnarong Kankao", section:"PRS C"},
+  {no:65, empId:"9000014", name:"Mr. Chanasuek Prathumchat", section:"PRS C"},
+  {no:66, empId:"9000015", name:"Mr. Chalongkon Sila", section:"PRS C"},
+  {no:67, empId:"9000027", name:"Mr. Bunyakon Phunphoem", section:"PRS C"},
+  {no:68, empId:"1301015", name:"Mr. Vasin Aphajid", section:"PRS Day"},
+  {no:69, empId:"1401068", name:"Mr. Teerapong Sarnpisuit", section:"PRS Day"},
+  {no:70, empId:"1502085", name:"Ms. Kanjana Serksiri", section:"PRS Day"},
+  {no:71, empId:"2201132", name:"Mr. Thanapol Jareansakul", section:"PRS Day"},
+  {no:72, empId:"2302144", name:"Ms. Kornchayada Auycharoen", section:"QAS"},
+  {no:73, empId:"2502152", name:"Ms. Anthiya Kittichotteerakorn", section:"QAS"},
+  {no:74, empId:"9000030", name:"Ms. Pornpan Deetsree", section:"QAS"},
+  {no:75, empId:"1301022", name:"Mr. Suwan Aungsan", section:"QCS"},
+  {no:76, empId:"1301027", name:"Mr. Chockchai Meelap", section:"QCS"},
+  {no:77, empId:"1301028", name:"Mr. Bundit Lamuang", section:"QCS"},
+  {no:78, empId:"1401064", name:"Mr. Bunman Noyphang", section:"QCS"},
+  {no:79, empId:"2002125", name:"Ms. Saranya Suwansawang", section:"QCS"},
+  {no:80, empId:"1302019", name:"Ms. Kanokphat Phonthon", section:"SCM"},
+  {no:81, empId:"1602092", name:"Ms. Pantip Prakongpuak", section:"SCM"},
+  {no:82, empId:"1702100", name:"Ms. Jutarat Ariyadip", section:"SCM"},
+  {no:83, empId:"2102129", name:"Ms. Saifon Suriyanon", section:"SCM"},
+  {no:84, empId:"2500154", name:"Ms. Nonthanan Nonthakot", section:"SCM"},
+  {no:85, empId:"9000005", name:"Mr. Sarawut Nalampang", section:"SCM"},
+  {no:86, empId:"9000007", name:"Mr. Chumpol Huaykrod", section:"SCM"},
+  {no:87, empId:"9000013", name:"Mr. Weerayut Jatturong", section:"SCM"},
+  {no:88, empId:"9000017", name:"Mr. Thodsaphon Kunma", section:"SCM"},
+  {no:89, empId:"9000018", name:"Ms. Tichada Pungpee", section:"SCM"},
+  {no:90, empId:"9000026", name:"Mr. Sirawit Wongphabut", section:"SCM"},
+  {no:91, empId:"1802008", name:"Ms. Orn-in Jiamket", section:"SHE"},
+  {no:92, empId:"2202133", name:"Ms. Nararut Arunsen", section:"SHE"}
+];
+
+(function populateEmpDropdown(){
+  const sel = document.getElementById('f-emp');
+  const bySection = {};
+  EMPLOYEES.forEach(e=>{
+    if(!bySection[e.section]) bySection[e.section]=[];
+    bySection[e.section].push(e);
+  });
+  Object.keys(bySection).sort().forEach(sec=>{
+    const og = document.createElement('optgroup');
+    og.label = sec;
+    bySection[sec].forEach(e=>{
+      const opt = document.createElement('option');
+      opt.value = e.empId;
+      opt.textContent = e.name;
+      og.appendChild(opt);
+    });
+    sel.appendChild(og);
+  });
+  sel.addEventListener('change', ()=>{
+    const emp = EMPLOYEES.find(e=>e.empId===sel.value);
+    document.getElementById('f-empid').value = emp ? emp.empId : '';
+    document.getElementById('f-dept').value = emp ? emp.section : '';
+    document.getElementById('start-btn').disabled = !emp;
+  });
+})();
+
+/* ===== QUIZ DATA ===== */
+const QUESTIONS = [
+  {
+    q:"HACCP ย่อมาจากอะไร?",
+    opts:["Hazard Analysis Critical Control Point","Health And Chemical Control Program","High Accuracy Control Checking Process","Hygiene Analysis Cleaning Control Plan"],
+    ans:0
+  },
+  {
+    q:"อันตรายด้านความปลอดภัยอาหารตามระบบ HACCP แบ่งเป็นกี่ประเภท?",
+    opts:["3 ประเภท","4 ประเภท","5 ประเภท (ชีวภาพ เคมี กายภาพ สารก่อภูมิแพ้ กัมมันตรังสี)","6 ประเภท"],
+    ans:2
+  },
+  {
+    q:"ทีมความปลอดภัยอาหาร (Food Safety Team) มีหน้าที่หลักตามเอกสารข้อใด?",
+    opts:["ตัดสินใจอนุมัติงบประมาณของบริษัท","ดำเนินการจัดทำระบบ HACCP ติดตามผล และรายงานความคืบหน้าให้หัวหน้าทีมความปลอดภัยอาหารทราบ","ดูแลงานบุคคลและสรรหาพนักงาน","จัดทำบัญชีและงบการเงิน"],
+    ans:1
+  },
+  {
+    q:"อันตรายระดับความรุนแรง \"สูง (High)\" ตามเอกสารนี้ หมายถึงอะไร?",
+    opts:["ทำให้อาหารไม่ปลอดภัยโดยชัดเจน ไม่จำกัดระยะเวลารักษา อาจถึงแก่ชีวิต","ทำให้อาหารไม่ปลอดภัย รักษามากกว่า 30 วัน แต่ไม่ถึงแก่ชีวิต","ทำให้อาหารไม่ปลอดภัย แต่รักษาหายภายใน 30 วัน","ไม่มีผลกระทบใด ๆ ต่อผู้บริโภค"],
+    ans:0
+  },
+  {
+    q:"ตัวอย่างเหตุการณ์ที่ต้องทบทวนแผน PRPs และแผนควบคุม HACCP ใหม่ ได้แก่ข้อใด?",
+    opts:["เปลี่ยนโลโก้บริษัทใหม่","มีการเปลี่ยนแปลงวัตถุดิบ/ผู้จำหน่ายวัตถุดิบ หรือมีผลการตรวจสอบภายใน-ภายนอกที่เกี่ยวข้อง","มีวันหยุดนักขัตฤกษ์เพิ่มขึ้น","ราคาน้ำมันเชื้อเพลิงเปลี่ยนแปลง"],
+    ans:1
+  }
+];
+
+let empData = {};
+let userAnswers = {};
+let submitted = false;
+
+function startQuiz(){
+  const emp = EMPLOYEES.find(e=>e.empId===document.getElementById('f-empid').value);
+  if(!emp) return;
+  empData = {empid:emp.empId, name:emp.name, dept:emp.section};
+  document.getElementById('emp-form').style.display='none';
+  document.getElementById('sum-name').textContent=emp.name;
+  document.getElementById('sum-dept').textContent=emp.section;
+  document.getElementById('emp-summary').style.display='flex';
+  document.getElementById('quiz-body').style.display='block';
+  renderQuestions();
+}
+
+function editEmp(){
+  document.getElementById('emp-form').style.display='block';
+  document.getElementById('emp-summary').style.display='none';
+  document.getElementById('quiz-body').style.display='none';
+  document.getElementById('result-box').classList.remove('show');
+}
+
+function renderQuestions(){
+  const c = document.getElementById('quiz-questions');
+  c.innerHTML='';
+  QUESTIONS.forEach((item,i)=>{
+    const div = document.createElement('div');
+    div.className='q-card';
+    div.innerHTML = `
+      <div class="q-num">ข้อที่ ${i+1} / ${QUESTIONS.length}</div>
+      <div class="q-text">${item.q}</div>
+      <div id="opts-${i}"></div>
+    `;
+    c.appendChild(div);
+    const optWrap = div.querySelector(`#opts-${i}`);
+    item.opts.forEach((opt,j)=>{
+      const b = document.createElement('button');
+      b.className='opt';
+      b.textContent = opt;
+      b.onclick = ()=>selectAnswer(i,j);
+      optWrap.appendChild(b);
+    });
+  });
+  updateProgress();
+}
+
+/* เลือก/เปลี่ยนคำตอบได้ตลอดเวลา จนกว่าจะกด "ส่งคำตอบ" */
+function selectAnswer(qi,oi){
+  if(submitted) return;
+  userAnswers[qi]=oi;
+  const optWrap = document.getElementById(`opts-${qi}`);
+  optWrap.querySelectorAll('.opt').forEach((b,j)=>{
+    b.classList.toggle('sel', j===oi);
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const done = Object.keys(userAnswers).length;
+  document.getElementById('prog-label').textContent = `${done} / ${QUESTIONS.length}`;
+  document.getElementById('prog-fill').style.width = (done/QUESTIONS.length*100)+'%';
+  document.getElementById('submit-btn').disabled = done < QUESTIONS.length;
+}
+
+function submitQuiz(){
+  submitted = true;
+  let score=0;
+  QUESTIONS.forEach((item,i)=>{
+    const correct = item.ans;
+    const chosen = userAnswers[i];
+    if(chosen===correct) score++;
+    const optWrap = document.getElementById(`opts-${i}`);
+    optWrap.querySelectorAll('.opt').forEach((b,j)=>{
+      b.disabled = true;
+      b.classList.remove('sel');
+      if(j===correct) b.classList.add('correct');
+      else if(j===chosen) b.classList.add('wrong');
+    });
+  });
+  const total = QUESTIONS.length;
+  const pct = Math.round(score/total*100);
+  const pass = score===total;
+
+  document.getElementById('result-emoji').textContent = pass ? '🏆' : '📚';
+  document.getElementById('result-score').textContent = `${score}/${total}`;
+  document.getElementById('result-sub').textContent = `คะแนน (${total} ข้อ)`;
+
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner ' + (pass ? 'pass' : 'fail');
+  document.getElementById('rb-title').textContent = pass
+    ? 'ยอดเยี่ยม! ผ่านแบบทดสอบ 100%'
+    : `ยังไม่ผ่าน — ตอบถูก ${score}/${total} ข้อ`;
+  document.getElementById('rb-token').textContent = pass
+    ? `🪙 รับไปเลย ${total} Token!`
+    : '🔁 ต้องตอบถูกครบ 100% เท่านั้นถึงจะผ่าน';
+  document.getElementById('rb-tagline').textContent = pass
+    ? 'คุณเข้าใจการวิเคราะห์อันตรายความปลอดภัยอาหารอย่างสมบูรณ์แบบ'
+    : 'ลองทบทวนเนื้อหาในแท็บ "มาตรการ" อีกครั้งแล้วทำใหม่นะคะ';
+
+  document.getElementById('result-box').classList.add('show');
+  document.getElementById('submit-btn').disabled = true;
+
+  saveToSheet(score,total,pct,pass);
+}
+
+function retryQuiz(){
+  submitted = false;
+  userAnswers = {};
+  document.getElementById('result-box').classList.remove('show');
+  document.getElementById('save-status').style.display='none';
+  document.getElementById('submit-btn').disabled = true;
+  renderQuestions();
+}
+
+/* ===== GOOGLE SHEETS INTEGRATION =====
+   วาง Web App URL จาก Apps Script ตรงนี้ (เหมือน EP.02 / EP.05) */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwY70Z0OshWMI-mAU_DF5y0Qr096Z266daEr2LKez6f2CInKm0JDXJl0PfkglTRJXY/exec';
+
+function saveToSheet(score,total,pct,pass){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH');
+  const timeStr = now.toLocaleTimeString('th-TH');
+  const result = pass ? 'ผ่าน' : 'ไม่ผ่าน';
+
+  const payload = {
+    date: dateStr,
+    time: timeStr,
+    empId: empData.empid,
+    name: empData.name,
+    dept: empData.dept,
+    score: score,
+    total: total,
+    percent: pct,
+    result: result,
+    ep: 'EP.06'
+  };
+
+  const st = document.getElementById('save-status');
+  if(!SCRIPT_URL || SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE'){
+    st.style.display='block';
+    st.className='save-status err';
+    st.textContent='⚠️ ยังไม่ได้ตั้งค่า Script URL — กรุณาเชื่อมต่อ Google Sheets';
+    return;
+  }
+
+  /* ส่งข้อมูลผ่านฟอร์มซ่อน + iframe แทน fetch() เพื่อเลี่ยงปัญหา CORS/redirect
+     ของ Google Apps Script Web App (วิธีเดียวกับ EP.05) */
+  let iframe = document.getElementById('hidden_iframe');
+  if(!iframe){
+    iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.id = 'hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+
+  const form = document.createElement('form');
+  form.action = SCRIPT_URL;
+  form.method = 'POST';
+  form.target = 'hidden_iframe';
+
+  Object.keys(payload).forEach(key=>{
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = payload[key];
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(()=>document.body.removeChild(form), 500);
+
+  st.style.display='block';
+  st.className='save-status ok';
+  st.textContent='✅ บันทึกผลลง Google Sheets เรียบร้อยแล้ว';
+}
+</script>
+</body>
+</html>
